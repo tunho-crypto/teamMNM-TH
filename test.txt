@@ -1,6 +1,0 @@
-Hanoi,21.0285,105.8542
-DaNang,ChuKhongPhaiSo,108.2022
-DongBiThieuDuLieu
-TPHCM,10.8231,106.6297
-SaoHoa,200.5,150.1
-CanTho,10.0452,105.7469
