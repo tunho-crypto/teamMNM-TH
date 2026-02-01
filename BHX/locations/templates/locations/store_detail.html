@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ store.ten_cua_hang }}</title>
+</head>
+<body>
+    {% include "navbar.html" %}
+    <a href="{% url 'store_list' %}">⬅ Quay lại danh sách</a>
+    
+    <h1 style="color: #008a37;">{{ store.ten_cua_hang }}</h1>
+    
+    <p><strong>📍 Địa chỉ:</strong> {{ store.dia_chi }}</p>
+    <p><strong>📞 Hotline:</strong> {{ store.so_dien_thoai }}</p>
+    <p><strong>🌍 Tọa độ:</strong> {{ store.vi_do }}, {{ store.kinh_do }}</p>
+    
+    {% if store.hinh_anh %}
+        <img src="{{ store.hinh_anh.url }}" alt="{{ store.ten_cua_hang }}" width="500">
+    {% endif %}
+</body>
+</html>

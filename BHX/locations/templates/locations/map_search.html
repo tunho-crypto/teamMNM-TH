@@ -1,0 +1,194 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bản đồ Bách Hóa Xanh</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        
+        .control-bar {
+            background-color: #f8f9fa; padding: 10px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #ddd; z-index: 1000; gap: 10px;
+        }
+
+        .search-container { display: flex; flex-grow: 1; max-width: 500px; }
+        .search-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px 0 0 4px; outline: none; }
+        .search-btn { padding: 10px 15px; background-color: #008a37; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer; font-weight: bold; }
+        
+        .btn-nearest { background-color: #ffe100; color: #d8232a; border: none; padding: 10px 15px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 2px rgba(0,0,0,0.1); }
+
+        #map { flex-grow: 1; width: 100%; z-index: 1; }
+        .popup-btn { background-color: #0078FF; color: white; border: none; width: 100%; padding: 8px; cursor: pointer; border-radius: 4px; margin-top: 5px; font-weight: bold; }
+        .leaflet-routing-container { display: none !important; }
+        .dist-tag { color: #d8232a; font-weight: bold; font-size: 0.9em; background: #fffbe6; padding: 2px 5px; border-radius: 3px; border: 1px solid #ffe58f; margin: 5px 0; display: inline-block; }
+        
+        /* Thông báo hướng dẫn kéo thả */
+        .drag-hint {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7); color: white; padding: 10px 20px;
+            border-radius: 30px; font-size: 14px; z-index: 9999; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    {% include "navbar.html" %}
+
+    <div class="control-bar">
+        <div class="search-container">
+            <input type="text" id="keyword" class="search-input" placeholder="Nhập tên cửa hàng..." list="store-suggestions">
+            <datalist id="store-suggestions"></datalist>
+            <button class="search-btn" onclick="timKiemVaChiDuong()">🔍 Tìm & Đi</button>
+        </div>
+        <button class="btn-nearest" onclick="timCuaHangGanNhat()">📡 Tìm quán gần nhất</button>
+    </div>
+
+    <div class="drag-hint" id="drag-hint">💡 Mẹo: Nếu định vị sai, hãy KÉO thả ghim màu xanh dương về đúng chỗ!</div>
+
+    <div id="status-bar" style="background: #e6f7ff; padding: 5px 20px; font-size: 0.9em; color: #0050b3; border-bottom: 1px solid #91d5ff; display:none;"></div>
+    <div id="map"></div>
+
+    <script>
+        var map = L.map('map').setView([10.7769, 106.7009], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+        var stores = {{ stores_json|safe }};
+        var userLatLng = null;
+        var routingControl = null;
+        var userMarker = null;
+
+        var storeIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/3737/3737299.png',
+            iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+        });
+
+        // 1. KHỞI TẠO CỬA HÀNG
+        var dataList = document.getElementById('store-suggestions');
+        stores.forEach(st => {
+            var option = document.createElement('option'); option.value = st.ten; dataList.appendChild(option);
+            st.markerObj = L.marker([st.lat, st.lon], {icon: storeIcon}).addTo(map);
+            capNhatPopup(st, null);
+        });
+
+        function capNhatPopup(store, distanceKm) {
+            var distHtml = distanceKm ? `<span class="dist-tag">📍 Cách bạn: ${distanceKm} km</span><br>` : ``;
+            var content = `<div style="text-align:center"><b style="color:#008a37">${store.ten}</b><br><small>${store.dia_chi}</small><br>${distHtml}<button class="popup-btn" onclick="xuLyChiDuong(${store.lat}, ${store.lon}, '${store.ten}')">🚗 Chỉ đường</button></div>`;
+            store.markerObj.bindPopup(content);
+        }
+
+        // 2. ĐỊNH VỊ + TÍNH NĂNG KÉO THẢ (DRAGGABLE)
+        function layViTriNguoiDung(callback) {
+            hienThongBao("⏳ Đang định vị...");
+            
+            if (!navigator.geolocation) { alert("Máy không hỗ trợ GPS"); return; }
+
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    capNhatViTriUser(pos.coords.latitude, pos.coords.longitude);
+                    if (callback) callback();
+                }, 
+                function(err) {
+                    alert("Định vị thất bại. Đang dùng vị trí mặc định (Chợ Bến Thành). Hãy KÉO ghim về nhà bạn!");
+                    // Nếu lỗi thì mặc định về Chợ Bến Thành để người dùng tự kéo
+                    capNhatViTriUser(10.7721, 106.6983); 
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        }
+
+        // Hàm vẽ Marker User và xử lý sự kiện Kéo Thả
+        function capNhatViTriUser(lat, lon) {
+            userLatLng = L.latLng(lat, lon);
+
+            if (userMarker) map.removeLayer(userMarker);
+            
+            // --- QUAN TRỌNG: draggable: true ---
+            userMarker = L.marker(userLatLng, {draggable: true}).addTo(map);
+            userMarker.bindPopup("<b>Bạn đang ở đây</b><br><i>(Kéo thả tôi nếu sai vị trí)</i>").openPopup();
+            map.setView(userLatLng, 14);
+
+            hienThongBao("✅ Đã định vị. KÉO ghim xanh dương nếu chưa đúng vị trí.");
+            tinhToanLaiKhoangCach(); // Tính khoảng cách ngay
+
+            // --- SỰ KIỆN: KHI THẢ TAY RA (DRAG END) ---
+            userMarker.on('dragend', function(event) {
+                var position = userMarker.getLatLng();
+                userLatLng = position; // Cập nhật vị trí mới
+                hienThongBao("🔄 Vị trí thay đổi. Đang tính lại khoảng cách...");
+                tinhToanLaiKhoangCach(); // Tính lại tất cả
+                
+                // Nếu đang có đường vẽ thì vẽ lại luôn
+                if (routingControl) {
+                    // Lấy điểm đích cũ từ đường vẽ cũ
+                    var waypoints = routingControl.getWaypoints();
+                    var dest = waypoints[waypoints.length - 1].latLng;
+                    veDuong(dest, "Cửa hàng");
+                }
+            });
+        }
+
+        function tinhToanLaiKhoangCach() {
+            stores.forEach(st => {
+                var dist = (userLatLng.distanceTo(L.latLng(st.lat, st.lon)) / 1000).toFixed(2);
+                capNhatPopup(st, dist);
+            });
+        }
+
+        layViTriNguoiDung(); // Chạy ngay
+
+        // 3. CÁC HÀM XỬ LÝ KHÁC
+        function xuLyChiDuong(lat, lon, tenStore) {
+            if (!userLatLng) layViTriNguoiDung(() => veDuong(L.latLng(lat, lon), tenStore));
+            else veDuong(L.latLng(lat, lon), tenStore);
+        }
+
+        function veDuong(destLatLng, tenStore) {
+            if (routingControl) map.removeControl(routingControl);
+            var dist = (userLatLng.distanceTo(destLatLng) / 1000).toFixed(2);
+            hienThongBao(`🚗 Đang tới: <b>${tenStore}</b> (${dist} km)`);
+
+            routingControl = L.Routing.control({
+                waypoints: [userLatLng, destLatLng],
+                createMarker: function() { return null; },
+                lineOptions: { styles: [{color: 'blue', opacity: 0.7, weight: 6}] },
+                fitSelectedRoutes: true
+            }).addTo(map);
+        }
+
+        function timCuaHangGanNhat() {
+            if (!userLatLng) return;
+            var minD = Infinity; var nearest = null;
+            stores.forEach(st => {
+                var d = userLatLng.distanceTo(L.latLng(st.lat, st.lon));
+                if (d < minD) { minD = d; nearest = st; }
+            });
+            if (nearest) {
+                alert(`Gần nhất: ${nearest.ten}`);
+                veDuong(L.latLng(nearest.lat, nearest.lon), nearest.ten);
+            }
+        }
+
+        function timKiemVaChiDuong() {
+            var k = document.getElementById('keyword').value.toLowerCase();
+            var f = stores.find(st => st.ten.toLowerCase().includes(k));
+            if (f) {
+                veDuong(L.latLng(f.lat, f.lon), f.ten);
+                f.markerObj.openPopup();
+            } else alert("Không tìm thấy!");
+        }
+
+        function hienThongBao(msg) {
+            var bar = document.getElementById('status-bar'); bar.style.display = 'block'; bar.innerHTML = msg;
+        }
+    </script>
+</body>
+</html>

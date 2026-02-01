@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Danh sách cửa hàng</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .filter-box { background: #f1f1f1; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        input, select, button { padding: 10px; margin-right: 10px; }
+        button { background: #008a37; color: white; border: none; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #008a37; color: white; }
+    </style>
+</head>
+<body>
+    {% include "navbar.html" %}
+
+    <h1>📋 DANH SÁCH CỬA HÀNG</h1>
+
+    <div class="filter-box">
+        <form method="get">
+            <select name="quan">
+                <option value="all">-- Tất cả khu vực --</option>
+                {% for quan in danh_sach_quan %}
+                    <option value="{{ quan }}" {% if dang_chon_quan == quan %}selected{% endif %}>
+                        {{ quan }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <input type="text" name="q" placeholder="Nhập tên đường, tên quán..." value="{{ dang_tim_kiem|default:'' }}">
+
+            <button type="submit">🔍 Lọc dữ liệu</button>
+            <a href="/locations/danh-sach/" style="margin-left: 10px; color: red;">Xóa bộ lọc</a>
+        </form>
+    </div>
+
+    <h3>Tìm thấy: {{ stores|length }} kết quả</h3>
+    <table>
+        <tr>
+            <th>Tên cửa hàng</th>
+            <th>Địa chỉ</th>
+            <th>Hành động</th>
+        </tr>
+        {% for store in stores %}
+        <tr>
+            <td><b>{{ store.ten_cua_hang }}</b></td>
+            <td>{{ store.dia_chi }}</td>
+            <td>
+                <a href="{% url 'store_detail' store.pk %}">👁️ Xem chi tiết</a> | 
+                <a href="/locations/ban-do/?id={{ store.id }}" target="_blank">🗺️ Xem map</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3" style="text-align:center; color:red;">Không tìm thấy cửa hàng nào!</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
