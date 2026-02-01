@@ -1,3 +1,0 @@
-City: Hanoi | Coords: (21.0285, 105.8542)
-City: TPHCM | Coords: (10.8231, 106.6297)
-City: CanTho | Coords: (10.0452, 105.7469)
