@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bách hóa XANH{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-main">
+            <div class="container header-grid">
+
+                <a href="{% url 'home' %}" class="logo-wrap">
+                    <div class="logo-box">
+                        <span class="logo-main">Bách hóa</span>
+                        <span class="logo-sub">XANH</span>
+                    </div>
+                </a>
+
+                <button type="button" class="location-box" onclick="toggleLocationModal()">
+                    <span class="location-icon">📍</span>
+                    <div class="location-text">
+                        <small>Giao đến</small>
+                        <strong id="selected-address">
+                            {% if request.session.delivery_address %}
+                                {{ request.session.delivery_address }}
+                            {% else %}
+                                Chọn khu vực giao hàng gần bạn
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <span class="location-arrow">▾</span>
+                </button>
+
+                <form class="search-box" action="{% url 'store:product_list' %}" method="get">
+                    <input type="text" name="q" placeholder="Hôm nay bạn cần tìm gì?">
+                    <button type="submit">🔍</button>
+                </form>
+
+                <div class="header-actions">
+                    {% if request.session.user_id %}
+                        <span class="header-user">
+                            Xin chào, {{ request.session.ho_ten|default:request.session.username }}
+                        </span>
+
+                        {% if request.session.role == "ADMIN" %}
+                            <a href="{% url 'store:admin_dashboard' %}" class="header-link">Trang quản trị</a>
+                        {% endif %}
+
+                        <a href="{% url 'store:order_history' %}" class="header-link">Đơn hàng</a>
+                        <a href="{% url 'store:logout' %}" class="header-link">Đăng xuất</a>
+                    {% else %}
+                        <a href="{% url 'store:login' %}" class="header-link">Đăng nhập</a>
+                        <a href="{% url 'store:register' %}" class="header-link">Đăng ký</a>
+                    {% endif %}
+
+                    <a href="{% url 'store:cart_detail' %}" class="cart-btn">
+                        <span>🛒</span>
+                        <span>Giỏ hàng</span>
+                        {% if cart_count %}
+                            <span class="cart-count">{{ cart_count }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <h4>Bách hóa XANH</h4>
+                <p>Mua sắm thực phẩm tươi ngon và hàng thiết yếu tiện lợi cho gia đình.</p>
+            </div>
+            <div>
+                <h4>Hỗ trợ khách hàng</h4>
+                <p>Hotline: 1900 1908</p>
+                <p>Email: support@bhxstore.local</p>
+            </div>
+            <div>
+                <h4>Dịch vụ</h4>
+                <p>Giao nhanh trong ngày</p>
+                <p>Chọn cửa hàng gần bạn</p>
+                <p>Giá rõ ràng - dễ mua sắm</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="location-modal" id="locationModal">
+        <div class="location-overlay" onclick="toggleLocationModal()"></div>
+        <div class="location-content">
+            <div class="location-head">
+                <h3>Chọn khu vực giao hàng</h3>
+                <button type="button" class="close-btn" onclick="toggleLocationModal()">✕</button>
+            </div>
+
+            <p class="location-desc">Chọn khu vực để xem đúng tồn kho, giá và cửa hàng gần bạn.</p>
+
+            <form method="post" action="{% url 'store:set_delivery_location' %}">
+                {% csrf_token %}
+                <div class="location-form-group">
+                    <label>Tỉnh / Thành phố</label>
+                    <select name="city">
+                        <option value="">Chọn tỉnh/thành</option>
+                        <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                        <option value="Hà Nội">Hà Nội</option>
+                        <option value="Đà Nẵng">Đà Nẵng</option>
+                        <option value="Cần Thơ">Cần Thơ</option>
+                    </select>
+                </div>
+
+                <div class="location-form-group">
+                    <label>Quận / Huyện</label>
+                    <input type="text" name="district" placeholder="Ví dụ: Bình Tân">
+                </div>
+
+                <div class="location-form-group">
+                    <label>Phường / Xã hoặc địa chỉ cụ thể</label>
+                    <input type="text" name="address" placeholder="Nhập địa chỉ giao hàng">
+                </div>
+
+                <div class="location-actions">
+                    <button type="submit" class="save-location-btn">Xác nhận vị trí giao hàng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleLocationModal() {
+            const modal = document.getElementById('locationModal');
+            modal.classList.toggle('show');
+        }
+    </script>
+</body>
+</html>

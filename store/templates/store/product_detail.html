@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.ten_san_pham }}{% endblock %}
+
+{% block content %}
+<section class="detail-page">
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span>/</span>
+            <a href="{% url 'store:product_list' %}">Sản phẩm</a>
+            <span>/</span>
+            <span>{{ product.ten_san_pham }}</span>
+        </div>
+
+        <div class="detail-wrapper">
+            <div class="detail-gallery-card">
+                <div class="detail-badge-wrap">
+                    {% if product.is_khuyen_mai %}
+                        <span class="detail-sale-badge">Khuyến mãi</span>
+                    {% endif %}
+                    {% if product.so_luong > 0 %}
+                        <span class="detail-stock-badge in-stock">Còn hàng</span>
+                    {% else %}
+                        <span class="detail-stock-badge out-stock">Hết hàng</span>
+                    {% endif %}
+                </div>
+
+                <div class="detail-image-box">
+                    {% if product.hinh_anh_url %}
+                        <img src="{{ product.hinh_anh_url }}" alt="{{ product.ten_san_pham }}" class="detail-main-image">
+                    {% else %}
+                        <div class="detail-no-image">BHX</div>
+                    {% endif %}
+                </div>
+
+                <div class="detail-mini-info">
+                    <div class="mini-info-card">
+                        <strong>Tươi ngon mỗi ngày</strong>
+                        <span>Đảm bảo chất lượng khi giao</span>
+                    </div>
+                    <div class="mini-info-card">
+                        <strong>Giao nhanh</strong>
+                        <span>Tiện lợi cho gia đình bận rộn</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-info-card">
+                <div class="detail-category-line">
+                    Danh mục:
+                    <strong>{{ product.loai.ten_loai }}</strong>
+                </div>
+
+                <h1 class="detail-title">{{ product.ten_san_pham }}</h1>
+
+                <p class="detail-desc">
+                    {% if product.mo_ta %}
+                        {{ product.mo_ta }}
+                    {% else %}
+                        Sản phẩm chất lượng, phù hợp cho nhu cầu mua sắm hằng ngày của gia đình.
+                    {% endif %}
+                </p>
+
+                <div class="detail-price-box">
+                    {% if product.is_khuyen_mai and product.gia_khuyen_mai %}
+                        <div class="detail-price-group">
+                            <span class="detail-price-sale">{{ product.gia_khuyen_mai }}đ</span>
+                            <span class="detail-price-old">{{ product.gia_goc }}đ</span>
+                        </div>
+                        <span class="discount-note">Giá ưu đãi hôm nay</span>
+                    {% else %}
+                        <div class="detail-price-group">
+                            <span class="detail-price-sale">{{ product.don_gia }}đ</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="detail-meta-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Tình trạng</span>
+                        <strong>
+                            {% if product.so_luong > 0 %}
+                                Còn {{ product.so_luong }} sản phẩm
+                            {% else %}
+                                Tạm hết hàng
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="meta-item">
+                        <span class="meta-label">Giao hàng</span>
+                        <strong>Hỗ trợ giao nhanh</strong>
+                    </div>
+
+                    <div class="meta-item">
+                        <span class="meta-label">Thanh toán</span>
+                        <strong>COD khi nhận hàng</strong>
+                    </div>
+                </div>
+
+                <div class="detail-action-row">
+                    {% if product.so_luong > 0 %}
+                        <a class="btn-buy-main" href="{% url 'store:add_to_cart' product.id %}">
+                            🛒 Thêm vào giỏ hàng
+                        </a>
+                    {% else %}
+                        <span class="btn-disabled">Hiện đang hết hàng</span>
+                    {% endif %}
+
+                    <a class="btn-back-outline" href="{% url 'store:product_list' %}">
+                        ← Quay lại danh sách
+                    </a>
+                </div>
+
+                <div class="detail-note-box">
+                    <p>Cam kết sản phẩm rõ nguồn gốc, giá minh bạch, phù hợp mua sắm hằng ngày.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

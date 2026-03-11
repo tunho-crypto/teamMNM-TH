@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}Trang chủ{% endblock %}
+
+{% block content %}
+<section class="home-hero">
+    <div class="container">
+        <div class="home-hero-box">
+            <div class="hero-left">
+                <span class="hero-tag">Siêu thị online cho gia đình</span>
+                <h1>Mua sắm thực phẩm tươi ngon mỗi ngày</h1>
+                <p>
+                    Đầy đủ rau củ, thịt cá, đồ uống, gia vị và các mặt hàng thiết yếu
+                    với giá hợp lý, dễ chọn, dễ mua.
+                </p>
+                <a href="{% url 'store:product_list' %}" class="hero-main-btn">Mua ngay</a>
+            </div>
+
+            <div class="hero-right">
+                <div class="hero-info-card">
+                    <strong>Giao nhanh</strong>
+                    <span>Tiện lợi cho mọi đơn hàng trong ngày</span>
+                </div>
+                <div class="hero-info-card">
+                    <strong>Hàng thiết yếu</strong>
+                    <span>Đa dạng sản phẩm cho gia đình</span>
+                </div>
+                <div class="hero-info-card">
+                    <strong>Ưu đãi mỗi ngày</strong>
+                    <span>Nhiều sản phẩm đang có giá tốt</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="home-categories">
+    <div class="container">
+        <div class="section-head">
+            <h2>Danh mục nổi bật</h2>
+            <a href="{% url 'store:product_list' %}">Xem tất cả</a>
+        </div>
+
+        <div class="category-grid home-category-grid">
+            {% if categories %}
+                {% for category in categories %}
+                    <a href="{% url 'store:product_list' %}?category={{ category.id }}" class="category-card">
+                        {{ category.ten_loai }}
+                    </a>
+                {% endfor %}
+            {% else %}
+                <a href="{% url 'store:product_list' %}" class="category-card">Rau củ</a>
+                <a href="{% url 'store:product_list' %}" class="category-card">Thịt cá</a>
+                <a href="{% url 'store:product_list' %}" class="category-card">Đồ uống</a>
+                <a href="{% url 'store:product_list' %}" class="category-card">Gia vị</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="home-banner-strip">
+    <div class="container">
+        <div class="banner-strip-box">
+            <div class="banner-pill">Tươi ngon mỗi ngày</div>
+            <div class="banner-pill">Giá tốt dễ mua</div>
+            <div class="banner-pill">Giao hàng nhanh</div>
+        </div>
+    </div>
+</section>
+
+<section class="featured-products home-product-section">
+    <div class="container">
+        <div class="section-head">
+            <h2>Sản phẩm khuyến mãi</h2>
+            <a href="{% url 'store:product_list' %}">Xem thêm</a>
+        </div>
+
+        <div class="product-grid product-grid-4">
+            {% for product in products_km %}
+            <div class="product-card">
+                <a href="{% url 'store:product_detail' product.id %}" class="product-image-wrap">
+                    {% if product.hinh_anh_url %}
+                        <img src="{{ product.hinh_anh_url }}" alt="{{ product.ten_san_pham }}" class="product-image">
+                    {% else %}
+                        <div class="product-image placeholder-image">BHX</div>
+                    {% endif %}
+                </a>
+
+                <div class="product-info">
+                    <h3 class="product-name">
+                        <a href="{% url 'store:product_detail' product.id %}">
+                            {{ product.ten_san_pham }}
+                        </a>
+                    </h3>
+
+                    <div class="product-price-row">
+                        {% if product.is_khuyen_mai and product.gia_khuyen_mai %}
+                            <div class="price-group">
+                                <span class="old-price">{{ product.gia_goc }}đ</span>
+                                <span class="price">{{ product.gia_khuyen_mai }}đ</span>
+                            </div>
+                        {% else %}
+                            <span class="price">{{ product.don_gia }}đ</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-actions">
+                        <a href="{% url 'store:product_detail' product.id %}" class="btn-detail">Xem chi tiết</a>
+                        <a href="{% url 'store:add_to_cart' product.id %}" class="btn-add">Thêm giỏ</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p>Chưa có sản phẩm khuyến mãi.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="featured-products home-product-section">
+    <div class="container">
+        <div class="section-head">
+            <h2>Sản phẩm mới</h2>
+            <a href="{% url 'store:product_list' %}">Xem thêm</a>
+        </div>
+
+        <div class="product-grid product-grid-4">
+            {% for product in products_new %}
+            <div class="product-card">
+                <a href="{% url 'store:product_detail' product.id %}" class="product-image-wrap">
+                    {% if product.hinh_anh_url %}
+                        <img src="{{ product.hinh_anh_url }}" alt="{{ product.ten_san_pham }}" class="product-image">
+                    {% else %}
+                        <div class="product-image placeholder-image">BHX</div>
+                    {% endif %}
+                </a>
+
+                <div class="product-info">
+                    <h3 class="product-name">
+                        <a href="{% url 'store:product_detail' product.id %}">
+                            {{ product.ten_san_pham }}
+                        </a>
+                    </h3>
+
+                    <div class="product-price-row">
+                        {% if product.is_khuyen_mai and product.gia_khuyen_mai %}
+                            <div class="price-group">
+                                <span class="old-price">{{ product.gia_goc }}đ</span>
+                                <span class="price">{{ product.gia_khuyen_mai }}đ</span>
+                            </div>
+                        {% else %}
+                            <span class="price">{{ product.don_gia }}đ</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-actions">
+                        <a href="{% url 'store:product_detail' product.id %}" class="btn-detail">Xem chi tiết</a>
+                        <a href="{% url 'store:add_to_cart' product.id %}" class="btn-add">Thêm giỏ</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p>Chưa có sản phẩm mới.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

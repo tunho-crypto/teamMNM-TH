@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Bách hóa XANH</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<section class="auth-page">
+    <div class="container">
+        <div class="auth-box">
+            <div class="auth-left">
+                <span class="auth-tag">Tham gia BHX Store</span>
+                <h1>Tạo tài khoản mới</h1>
+                <p>Đăng ký nhanh để đặt hàng, lưu thông tin và theo dõi lịch sử mua sắm.</p>
+            </div>
+
+            <div class="auth-right">
+                <h2>Đăng ký</h2>
+
+                {% if error %}
+                    <div class="auth-alert">{{ error }}</div>
+                {% endif %}
+
+                <form method="post" class="auth-form">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="ho_ten">Họ và tên</label>
+                        <input type="text" id="ho_ten" name="ho_ten" placeholder="Nhập họ và tên" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username">Tên đăng nhập</label>
+                        <input type="text" id="username" name="username" placeholder="Nhập tên đăng nhập" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dien_thoai">Số điện thoại</label>
+                        <input type="text" id="dien_thoai" name="dien_thoai" placeholder="Nhập số điện thoại" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Mật khẩu</label>
+                        <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password">Nhập lại mật khẩu</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Nhập lại mật khẩu" required>
+                    </div>
+
+                    <button type="submit" class="auth-submit-btn">Đăng ký</button>
+                </form>
+
+                <p class="auth-switch">
+                    Đã có tài khoản?
+                    <a href="{% url 'store:login' %}">Đăng nhập</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>
