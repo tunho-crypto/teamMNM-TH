@@ -78,21 +78,12 @@ WSGI_APPLICATION = 'quanly_bhx_core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'mssql',
-        'NAME': 'BHX',
-        'USER': 'sa',
-        'PASSWORD': '123',
-        'HOST': r'MSI\SQLEXPRESS',  # Thêm chữ 'r' ở trước để Python hiểu dấu '\'
-        # --- LƯU Ý VỀ PORT ---
-        # Nếu máy bạn dùng SQLEXPRESS, thường nó dùng cổng động (Dynamic Port).
-        # Tốt nhất là để trống để nó tự tìm, hoặc kiểm tra kỹ trong SQL Config.
-        'PORT': '', 
-        'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
-            'unicode_results': True,
-            # SQL Server mới hay bắt lỗi SSL, thêm dòng này để bỏ qua
-            'extra_params': 'TrustServerCertificate=yes',
-        },
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'bachhoaxanh_db',    
+        'USER': 'postgres',          
+        'PASSWORD': '123456',        
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -135,3 +126,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+# Cấu hình đường dẫn lưu ảnh tải lên
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
