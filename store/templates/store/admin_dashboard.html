@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Dashboard quản trị{% endblock %}
+
+{% block content %}
+<section class="admin-dashboard">
+    <div class="container admin-layout">
+        <aside class="admin-sidebar">
+            <div class="admin-brand">
+                <div class="admin-brand-box">BHX</div>
+                <div>
+                    <h3>Quản trị hệ thống</h3>
+                    <p>Quản lý cửa hàng Bách Hóa Xanh</p>
+                </div>
+            </div>
+
+            <nav class="admin-menu">
+                <a href="{% url 'store:admin_dashboard' %}" class="active">Tổng quan</a>
+                <a href="{% url 'store:product_list' %}">Sản phẩm</a>
+                <a href="{% url 'store:order_history' %}">Đơn hàng</a>
+                <a href="/admin/">Django Admin</a>
+                <a href="{% url 'store:logout' %}">Đăng xuất</a>
+            </nav>
+        </aside>
+
+        <div class="admin-main">
+            <div class="admin-topbar">
+                <div>
+                    <h1>Dashboard quản trị</h1>
+                    <p>Xin chào {{ request.session.ho_ten|default:request.session.username }}, chúc bạn làm việc hiệu quả.</p>
+                </div>
+                <a href="/" class="admin-back-home">Về trang chủ</a>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>Tổng sản phẩm</span>
+                    <strong>{{ tong_san_pham }}</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Tổng khách hàng</span>
+                    <strong>{{ tong_khach_hang }}</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Tổng đơn hàng</span>
+                    <strong>{{ tong_don_hang }}</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Tổng chi nhánh</span>
+                    <strong>{{ tong_chi_nhanh }}</strong>
+                </div>
+            </div>
+
+            <div class="admin-content-grid">
+                <div class="admin-panel">
+                    <div class="panel-head">
+                        <h3>Đơn hàng mới</h3>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Khách hàng</th>
+                                    <th>Ngày lập</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in don_hang_moi %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.khach_hang.ten_khach_hang }}</td>
+                                    <td>{{ order.ngay_lap|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span class="status-badge">{{ order.trang_thai }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4">Chưa có đơn hàng nào.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div class="panel-head">
+                        <h3>Sản phẩm sắp hết</h3>
+                    </div>
+
+                    <div class="stock-list">
+                        {% for sp in san_pham_sap_het %}
+                            <div class="stock-item">
+                                <div>
+                                    <strong>{{ sp.ten_san_pham }}</strong>
+                                    <p>Tồn kho thấp, cần nhập thêm</p>
+                                </div>
+                                <span class="stock-count">{{ sp.so_luong }}</span>
+                            </div>
+                        {% empty %}
+                            <p>Không có sản phẩm sắp hết.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

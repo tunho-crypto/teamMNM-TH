@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Giỏ hàng{% endblock %}
+
+{% block content %}
+<section class="cart-page">
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span>/</span>
+            <span>Giỏ hàng</span>
+        </div>
+
+        <div class="cart-header-box">
+            <div>
+                <h1 class="cart-title">🛒 Giỏ hàng của bạn</h1>
+                <p class="cart-subtitle">Kiểm tra sản phẩm đã chọn trước khi thanh toán.</p>
+            </div>
+            <div class="cart-summary-badge">
+                {{ cart_items|length }} sản phẩm
+            </div>
+        </div>
+
+        {% if cart_items %}
+        <div class="cart-layout">
+            <div class="cart-list-card">
+                <div class="cart-table-wrap">
+                    <table class="cart-table">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>Số lượng</th>
+                                <th>Thành tiền</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in cart_items %}
+                            <tr>
+                                <td>
+                                    <div class="cart-product-cell">
+                                        <div class="cart-product-image">BHX</div>
+                                        <div class="cart-product-info">
+                                            <strong>{{ item.ten_san_pham }}</strong>
+                                            <span>Hàng thiết yếu chất lượng</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.don_gia }}đ</td>
+                                <td>
+                                    <span class="cart-qty-badge">{{ item.so_luong }}</span>
+                                </td>
+                                <td class="price">{{ item.thanh_tien }}đ</td>
+                                <td>
+                                    <a class="btn-delete" href="{% url 'store:remove_from_cart' item.product_id %}">
+                                        Xóa
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="cart-total-card">
+                <h2>Tóm tắt đơn hàng</h2>
+
+                <div class="summary-line">
+                    <span>Số mặt hàng</span>
+                    <strong>{{ cart_items|length }}</strong>
+                </div>
+
+                <div class="summary-line">
+                    <span>Phí giao hàng</span>
+                    <strong>Miễn phí</strong>
+                </div>
+
+                <div class="summary-line total-line">
+                    <span>Tổng tiền</span>
+                    <strong>{{ tong_tien }}đ</strong>
+                </div>
+
+                <div class="cart-side-actions">
+                    <a class="btn-checkout" href="#">
+                        Tiến hành thanh toán
+                    </a>
+
+                    <a class="btn-continue-shopping" href="{% url 'store:product_list' %}">
+                        ← Tiếp tục mua sắm
+                    </a>
+                </div>
+
+                <div class="cart-note">
+                    Giá và tình trạng hàng có thể thay đổi theo thời điểm đặt hàng.
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="empty-cart-card">
+            <div class="empty-cart-icon">🛒</div>
+            <h2>Giỏ hàng đang trống</h2>
+            <p>Hãy chọn thêm sản phẩm để bắt đầu mua sắm.</p>
+            <a class="btn-continue-shopping" href="{% url 'store:product_list' %}">
+                Xem sản phẩm ngay
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

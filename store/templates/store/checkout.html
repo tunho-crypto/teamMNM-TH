@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Thanh toán{% endblock %}
+
+{% block content %}
+<section class="checkout-page">
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span>/</span>
+            <a href="{% url 'store:cart' %}">Giỏ hàng</a>
+            <span>/</span>
+            <span>Thanh toán</span>
+        </div>
+
+        <div class="checkout-header-box">
+            <div>
+                <h1 class="checkout-title">Thanh toán đơn hàng</h1>
+                <p class="checkout-subtitle">Điền thông tin nhận hàng và kiểm tra lại đơn trước khi xác nhận.</p>
+            </div>
+            <div class="checkout-badge">
+                {{ cart_items|length }} sản phẩm
+            </div>
+        </div>
+
+        <div class="checkout-layout">
+            <div class="checkout-form-card">
+                <h2 class="checkout-section-title">Thông tin người nhận</h2>
+
+                <form method="post" class="checkout-form">
+                    {% csrf_token %}
+
+                    <div class="checkout-form-grid">
+                        <div class="form-group">
+                            <label for="ten_nguoi_nhan">Họ và tên</label>
+                            <input type="text" id="ten_nguoi_nhan" name="ten_nguoi_nhan" placeholder="Nhập họ tên người nhận" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sdt_nguoi_nhan">Số điện thoại</label>
+                            <input type="text" id="sdt_nguoi_nhan" name="sdt_nguoi_nhan" placeholder="Nhập số điện thoại" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dia_chi_giao_hang">Địa chỉ giao hàng</label>
+                        <textarea id="dia_chi_giao_hang" name="dia_chi_giao_hang" rows="4" placeholder="Nhập địa chỉ giao hàng đầy đủ" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ghi_chu">Ghi chú</label>
+                        <textarea id="ghi_chu" name="ghi_chu" rows="3" placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."></textarea>
+                    </div>
+
+                    <h2 class="checkout-section-title">Phương thức thanh toán</h2>
+
+                    <div class="payment-method-list">
+                        <label class="payment-option">
+                            <input type="radio" name="phuong_thuc_thanh_toan" value="COD" checked>
+                            <span>
+                                <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                <small>Phù hợp với hầu hết đơn hàng.</small>
+                            </span>
+                        </label>
+
+                        <label class="payment-option">
+                            <input type="radio" name="phuong_thuc_thanh_toan" value="CHUYEN_KHOAN">
+                            <span>
+                                <strong>Chuyển khoản</strong>
+                                <small>Thanh toán trước khi giao hàng.</small>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="checkout-action-row">
+                        <a href="{% url 'store:cart' %}" class="btn-back-outline">
+                            ← Quay lại giỏ hàng
+                        </a>
+                        <button type="submit" class="btn-checkout-submit">
+                            Xác nhận đặt hàng
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="checkout-summary-card">
+                <h2>Tóm tắt đơn hàng</h2>
+
+                <div class="checkout-product-list">
+                    {% for item in cart_items %}
+                    <div class="checkout-product-item">
+                        <div class="checkout-product-thumb">BHX</div>
+                        <div class="checkout-product-info">
+                            <strong>{{ item.ten_san_pham }}</strong>
+                            <span>Số lượng: {{ item.so_luong }}</span>
+                        </div>
+                        <div class="checkout-product-price">
+                            {{ item.thanh_tien }}đ
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary-line">
+                    <span>Tạm tính</span>
+                    <strong>{{ tong_tien }}đ</strong>
+                </div>
+
+                <div class="summary-line">
+                    <span>Phí giao hàng</span>
+                    <strong>Miễn phí</strong>
+                </div>
+
+                <div class="summary-line total-line">
+                    <span>Tổng thanh toán</span>
+                    <strong>{{ tong_tien }}đ</strong>
+                </div>
+
+                <div class="checkout-note">
+                    Bằng việc xác nhận đơn, bạn đồng ý với chính sách bán hàng và giao nhận của cửa hàng.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
