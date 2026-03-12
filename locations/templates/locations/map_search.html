@@ -8,8 +8,13 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
     <style>
         body { margin: 0; font-family: Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; }
@@ -20,12 +25,10 @@
 
         .control-bar { background-color: #f8f9fa; padding: 10px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-bottom: 1px solid #ddd; z-index: 1000; }
 
-        /* Khung chứa ô tìm kiếm (Cần relative để cái danh sách xổ xuống nằm đúng chỗ) */
         .search-container { position: relative; display: flex; flex-grow: 1; min-width: 250px; }
         .search-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px 0 0 4px; outline: none; }
         .search-btn { padding: 10px 15px; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer; font-weight: bold; white-space: nowrap; }
         
-        /* Giao diện danh sách gợi ý địa chỉ */
         .suggestions-list {
             position: absolute; top: 100%; left: 0; right: 50px; background: white;
             border: 1px solid #ccc; max-height: 250px; overflow-y: auto;
@@ -46,9 +49,9 @@
 <body>
 
     <div class="custom-navbar">
-        <a href="{% url 'map_search' %}">🗺️ BẢN ĐỒ</a>
-        <a href="{% url 'store_list' %}">📋 DANH SÁCH CỬA HÀNG</a>
-    </div>
+    <a href="{% url 'map_search' %}">🗺️ BẢN ĐỒ</a>
+    <a href="{% url 'store_list' %}">📋 DANH SÁCH CỬA HÀNG</a>
+</div>
 
     <div class="control-bar">
         <div class="search-container">
@@ -58,7 +61,9 @@
         </div>
 
         <div class="search-container">
-            <input type="text" id="keyword" class="search-input" placeholder="Tìm tên Bách Hóa Xanh...">
+            <input type="text" id="keyword" class="search-input" list="danh-sach-cua-hang" placeholder="Tìm tên Bách Hóa Xanh...">
+            <datalist id="danh-sach-cua-hang"></datalist>
+            
             <button class="search-btn" style="background-color: #008a37;" onclick="timKiemVaChiDuong()">🔍 Tìm & Đi</button>
         </div>
 
@@ -77,36 +82,48 @@
         var routingControl = null;
         var userMarker = null;
 
-        // Dùng thẳng Logo Bách Hóa Xanh làm mốc đánh dấu
-        // Dùng ghim màu Xanh lá cây (Green) đặc trưng của BHX
-       // Tạo Icon Cửa Hàng chuẩn xịn bằng CSS (Màu xanh BHX + Giỏ hàng)
         var storeIcon = L.divIcon({
             html: `
                 <div style="
-                    background-color: #008a37; 
-                    width: 32px; 
-                    height: 32px; 
-                    border-radius: 50% 50% 50% 0; 
-                    transform: rotate(-45deg); 
-                    border: 2px solid white; 
-                    box-shadow: -2px 2px 5px rgba(0,0,0,0.4);
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center;
+                    background-color: #008a37; width: 32px; height: 32px; 
+                    border-radius: 50% 50% 50% 0; transform: rotate(-45deg); 
+                    border: 2px solid white; box-shadow: -2px 2px 5px rgba(0,0,0,0.4);
+                    display: flex; align-items: center; justify-content: center;
                 ">
                     <span style="transform: rotate(45deg); font-size: 16px;">🛒</span>
                 </div>
             `,
-            className: '', // Quan trọng: Tắt viền trắng hình vuông mặc định của Leaflet
-            iconSize: [36, 36],      // Kích thước tổng thể
-            iconAnchor: [18, 36],    // Góc nhọn dưới cùng sẽ cắm chính xác vào tọa độ
-            popupAnchor: [0, -36]    // Bảng thông tin nổi lên từ đỉnh ghim
+            className: '',
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
+            popupAnchor: [0, -36]
         });
 
-        stores.forEach(st => {
-            st.markerObj = L.marker([st.lat, st.lon], {icon: storeIcon}).addTo(map);
-            capNhatPopup(st, null);
+        // [MỚI CẤY THÊM] Khởi tạo Cụm Ghim (MarkerCluster)
+        var markers = L.markerClusterGroup({
+            chunkedLoading: true,
+            maxClusterRadius: 50 // Khoảng cách gộp ghim, càng to gom càng nhiều
         });
+
+        // Lấy thẻ datalist để nhét tên cửa hàng vào
+        var dataListElement = document.getElementById('danh-sach-cua-hang');
+
+        stores.forEach(st => {
+            // [SỬA LẠI] Không .addTo(map) trực tiếp nữa, mà tạo marker rỗng
+            st.markerObj = L.marker([st.lat, st.lon], {icon: storeIcon});
+            capNhatPopup(st, null);
+            
+            // [MỚI CẤY THÊM] Đưa marker vào cụm
+            markers.addLayer(st.markerObj);
+
+            // [MỚI CẤY THÊM] Tạo tự động danh sách gợi ý khi gõ tên cửa hàng
+            var option = document.createElement('option');
+            option.value = st.ten;
+            dataListElement.appendChild(option);
+        });
+
+        // [MỚI CẤY THÊM] Đổ toàn bộ Cụm Ghim lên bản đồ cùng 1 lúc
+        map.addLayer(markers);
 
         function capNhatPopup(store, distanceKm) {
             var distHtml = distanceKm ? `<br><b>📍 Cách bạn: ${distanceKm} km</b>` : ``;
@@ -116,36 +133,26 @@
                     <small>${store.dia_chi}</small>${distHtml}
                     <div class="popup-actions">
                         <button class="popup-btn" style="background-color: #008a37;" onclick="xuLyChiDuong(${store.lat}, ${store.lon}, '${store.ten}')">🚗 Chỉ đường</button>
-                        <a href="/locations/chi-tiet/${store.id}/" class="popup-btn" style="background-color: #f39c12;">ℹ️ Chi tiết</a>
+                        <a href="/store/chi-tiet/${store.id}/" class="popup-btn" style="background-color: #f39c12;">ℹ️ Chi tiết</a>
                     </div>
                 </div>`;
             store.markerObj.bindPopup(content);
         }
 
-        // --- TÍNH NĂNG GỢI Ý ĐỊA CHỈ KHI GÕ ---
+        // --- CÁC HÀM XỬ LÝ CỦA BẠN (GIỮ NGUYÊN) ---
         var timeoutId = null;
         function goiYDiaChi(text) {
             clearTimeout(timeoutId);
             var list = document.getElementById('address-suggestions');
-
-            // Nếu xóa hết hoặc gõ chưa đủ 3 ký tự thì ẩn danh sách đi
-            if (text.trim().length < 3) {
-                list.style.display = 'none';
-                return;
-            }
-
-            // Đợi 0.6 giây sau khi ngừng gõ mới gọi API để tránh bị chặn
+            if (text.trim().length < 3) { list.style.display = 'none'; return; }
             timeoutId = setTimeout(() => {
-                // Thêm countrycodes=vn để chỉ tìm ở Việt Nam
                 var url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}&countrycodes=vn&limit=5`;
-                
                 fetch(url).then(r => r.json()).then(data => {
-                    list.innerHTML = ''; // Xóa kết quả cũ
+                    list.innerHTML = '';
                     if (data.length > 0) {
                         data.forEach(item => {
                             var li = document.createElement('li');
                             li.innerText = item.display_name;
-                            // Khi click vào 1 dòng gợi ý
                             li.onclick = function() {
                                 document.getElementById('user-location-input').value = item.display_name;
                                 list.style.display = 'none';
@@ -156,21 +163,15 @@
                             list.appendChild(li);
                         });
                         list.style.display = 'block';
-                    } else {
-                        list.style.display = 'none';
-                    }
-                }).catch(e => console.error("Lỗi lấy gợi ý:", e));
+                    } else list.style.display = 'none';
+                }).catch(e => console.error("Lỗi:", e));
             }, 600); 
         }
 
-        // Ẩn danh sách gợi ý khi bấm chuột ra chỗ khác trên màn hình
         document.addEventListener('click', function(e) {
-            if (e.target.id !== 'user-location-input') {
-                document.getElementById('address-suggestions').style.display = 'none';
-            }
+            if (e.target.id !== 'user-location-input') document.getElementById('address-suggestions').style.display = 'none';
         });
 
-        // Nút bấm "Đặt vị trí" thủ công (đề phòng click trượt)
         function timViTriTuNhap() {
             var address = document.getElementById('user-location-input').value;
             if (!address) { alert("Vui lòng nhập địa chỉ của bạn trước!"); return; }
@@ -185,7 +186,6 @@
             });
         }
 
-        // --- CÁC HÀM XỬ LÝ BẢN ĐỒ CÒN LẠI ---
         function layViTriNguoiDung(callback) {
             hienThongBao("⏳ Đang định vị GPS...");
             if (navigator.geolocation) {
@@ -203,12 +203,18 @@
             userMarker = L.marker(userLatLng, {draggable: true}).addTo(map);
             userMarker.bindPopup("<b>Vị trí của bạn</b><br><i>(Kéo thả để dời đi)</i>").openPopup();
             
+            // Cập nhật lại số kilomet trên tất cả các cửa hàng
             stores.forEach(st => capNhatPopup(st, (userLatLng.distanceTo(L.latLng(st.lat, st.lon)) / 1000).toFixed(2)));
-
+            
+            // SỰ KIỆN KÉO THẢ VỊ TRÍ
             userMarker.on('dragend', function() {
-                userLatLng = userMarker.getLatLng();
+                userLatLng = userMarker.getLatLng(); // Lưu tọa độ mới thả xuống
                 stores.forEach(st => capNhatPopup(st, (userLatLng.distanceTo(L.latLng(st.lat, st.lon)) / 1000).toFixed(2)));
-                if (routingControl) veDuong(routingControl.getWaypoints()[1].latLng, "Cửa hàng đang chọn");
+                
+                // [ĐÃ SỬA]: Nếu đang có đường chỉ dẫn, tự động tính lại cửa hàng gần nhất và vẽ lại đường mới!
+                if (routingControl) {
+                    timCuaHangGanNhat();
+                }
             });
         }
 
@@ -230,23 +236,33 @@
             if (!userLatLng) return;
             var nearest = stores.reduce((prev, curr) => (userLatLng.distanceTo(L.latLng(curr.lat, curr.lon)) < userLatLng.distanceTo(L.latLng(prev.lat, prev.lon)) ? curr : prev));
             veDuong(L.latLng(nearest.lat, nearest.lon), nearest.ten);
-            nearest.markerObj.openPopup();
+            // [SỬA LẠI] Dùng hàm của MarkerCluster để zoom tới ghim bị giấu
+            markers.zoomToShowLayer(nearest.markerObj, function () { nearest.markerObj.openPopup(); });
         }
 
         function timKiemVaChiDuong() {
             var k = document.getElementById('keyword').value.toLowerCase();
             var f = stores.find(st => st.ten.toLowerCase().includes(k));
             if (f) {
-                if(userLatLng) veDuong(L.latLng(f.lat, f.lon), f.ten); else map.setView([f.lat, f.lon], 15);
-                f.markerObj.openPopup();
-            } else alert("Không tìm thấy!");
+                // [SỬA LẠI - XỬ LÝ LỖI GIẬT LÙI BẢN ĐỒ] 
+                // Xóa tính năng tự động vẽ đường nếu user chưa chọn vị trí, thay vào đó chỉ zoom tới cửa hàng
+                if(userLatLng) {
+                    veDuong(L.latLng(f.lat, f.lon), f.ten);
+                } else {
+                    // Zoom xuyên qua lớp Cluster để mở popup
+                    markers.zoomToShowLayer(f.markerObj, function () { 
+                        f.markerObj.openPopup(); 
+                    });
+                }
+            } else alert("Không tìm thấy cửa hàng này!");
         }
 
         function hienThongBao(msg) {
             var bar = document.getElementById('status-bar'); bar.style.display = 'block'; bar.innerHTML = msg;
         }
 
-        layViTriNguoiDung();
+        // Tạm thời tắt auto lấy GPS lúc mới vào web để bản đồ không bị giật
+        // layViTriNguoiDung(); 
     </script>
 </body>
 </html>

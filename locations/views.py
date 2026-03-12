@@ -60,3 +60,15 @@ def danh_sach_cua_hang(request):
 def chi_tiet_cua_hang(request, pk):
     store = get_object_or_404(CuaHang, pk=pk)
     return render(request, 'locations/store_detail.html', {'store': store})
+# Trong file views.py
+from store.models import ChiNhanh
+
+def map_view(request):
+    # Lấy danh sách tên cửa hàng
+    danh_sach_ten = ChiNhanh.objects.values_list('ten_chi_nhanh', flat=True)
+    
+    context = {
+        'danh_sach_ten': danh_sach_ten,
+        # ... các biến khác của bạn
+    }
+    return render(request, 'locations/map_search.html', context)
