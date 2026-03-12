@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ store.ten_cua_hang }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .btn { display: inline-block; padding: 8px 15px; margin-right: 10px; text-decoration: none; color: white; border-radius: 4px; font-weight: bold; }
+        .btn-list { background-color: #f39c12; }
+        .btn-map { background-color: #0078FF; }
+        .store-img { max-width: 500px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-top: 15px; border: 2px solid #ddd; }
+    </style>
+</head>
+<body>
+    {% include "navbar.html" %}
+    
+    <div style="margin-bottom: 20px; margin-top: 20px;">
+        <a href="{% url 'store_list' %}" class="btn btn-list">⬅ Quay lại danh sách</a>
+        <a href="{% url 'map_search' %}" class="btn btn-map">🗺️ Xem trên Bản đồ</a>
+    </div>
+    
+    <h1 style="color: #008a37;">🛒 {{ store.ten_cua_hang }}</h1>
+    
+    <p><strong>📍 Địa chỉ:</strong> {{ store.dia_chi }}</p>
+    <p><strong>📞 Hotline:</strong> {{ store.so_dien_thoai }}</p>
+    <p><strong>🌍 Tọa độ:</strong> {{ store.vi_do }}, {{ store.kinh_do }}</p>
+    
+    {% if store.hinh_anh %}
+        <p><strong>📸 Hình ảnh cửa hàng:</strong></p>
+        <img src="{{ store.hinh_anh.url }}" alt="{{ store.ten_cua_hang }}" class="store-img">
+    {% else %}
+        <p style="color: #7f8c8d;"><i>(Cửa hàng này chưa được cập nhật hình ảnh)</i></p>
+    {% endif %}
+
+</body>
+</html>
