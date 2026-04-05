@@ -1,6 +1,6 @@
 # locations/models.py
 from django.db import models
-
+from store.models import TaiKhoan
 class CuaHang(models.Model):
     ten_cua_hang = models.CharField(max_length=200, verbose_name="Tên cửa hàng")
     dia_chi = models.CharField(max_length=255, verbose_name="Địa chỉ")
@@ -14,3 +14,5 @@ class CuaHang(models.Model):
 
     def __str__(self):
         return self.ten_cua_hang
+    
+    
