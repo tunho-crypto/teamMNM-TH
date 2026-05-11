@@ -362,6 +362,122 @@
         color: #dc2626;
     }
 
+
+    .product-extra-section {
+        margin-top: 32px;
+        display: grid;
+        gap: 24px;
+    }
+
+    .product-extra-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 28px;
+    }
+
+    .extra-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #14532d;
+        margin: 0 0 18px;
+    }
+
+    .extra-table-wrap {
+        overflow-x: auto;
+    }
+
+    .extra-info-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .extra-info-table th,
+    .extra-info-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        vertical-align: top;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .extra-info-table th {
+        width: 240px;
+        background: #f0fdf4;
+        color: #166534;
+        font-weight: 700;
+    }
+
+    .store-list-wrap {
+        display: grid;
+        gap: 20px;
+    }
+
+    .store-card {
+        border: 1px solid #dcfce7;
+        border-radius: 18px;
+        padding: 18px;
+        background: #fcfffd;
+    }
+
+    .store-card h3 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        color: #166534;
+    }
+
+    .store-card p {
+        margin: 0 0 12px;
+        color: #475569;
+    }
+
+    .store-stock-badge {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #166534;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .store-gallery {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+    }
+
+    .store-image {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+    }
+
+    .store-image-empty,
+    .store-empty-text {
+        color: #64748b;
+        font-size: 15px;
+    }
+
+    @media (max-width: 991px) {
+        .extra-title {
+            font-size: 24px;
+        }
+
+        .extra-info-table th {
+            width: 160px;
+        }
+
+        .store-gallery {
+            grid-template-columns: repeat(2, minmax(120px, 1fr));
+        }
+    }
+
     @media (max-width: 991px) {
         .review-rating-box h2 {
             font-size: 28px;
@@ -469,27 +585,31 @@
                 <div class="detail-price-box">
                     {% if product.is_khuyen_mai and product.gia_khuyen_mai %}
                         <div class="detail-price-group">
-                            <span class="detail-price-sale">{{ product.gia_khuyen_mai }}đ</span>
+                            <span class="detail-price-sale">{{ product.gia_khuyen_mai|vnd }}</span>
                             {% if product.gia_goc %}
-                                <span class="detail-price-old">{{ product.gia_goc }}đ</span>
+                                <span class="detail-price-old">{{ product.gia_goc|vnd }}đ</span>
                             {% endif %}
                         </div>
                         <span class="discount-note">Giá ưu đãi hôm nay</span>
                     {% else %}
                         <div class="detail-price-group">
-                            <span class="detail-price-sale">{{ product.don_gia }}đ</span>
+                            <span class="detail-price-sale">{{ product.don_gia|vnd }}đ</span>
                         </div>
                     {% endif %}
                 </div>
 
                 <div class="detail-meta-grid">
-                    <div class="meta-item">
+                   <div class="meta-item">
                         <span class="meta-label">Tình trạng</span>
                         <strong>
-                            {% if product.so_luong > 0 %}
-                                Còn {{ product.so_luong }} sản phẩm
+                            {% if product.da_chon_cua_hang %}
+                                {% if product.ton_kho_hien_tai > 0 %}
+                                    <span style="color: #0b9445;">Còn hàng</span>
+                                {% else %}
+                                    <span style="color: #d8232a;">Tạm hết</span>
+                                {% endif %}
                             {% else %}
-                                Tạm hết hàng
+                                <span style="color: #f39c12;">Chưa chọn KV</span>
                             {% endif %}
                         </strong>
                     </div>
@@ -505,25 +625,75 @@
                     </div>
                 </div>
 
-                <div class="detail-action-row">
-                    {% if product.so_luong > 0 %}
-                        <a class="btn-buy-main" href="{% url 'store:add_to_cart' product.id %}">
-                            🛒 Thêm vào giỏ hàng
-                        </a>
-                    {% else %}
-                        <span class="btn-disabled">Hiện đang hết hàng</span>
-                    {% endif %}
-
-                    <a class="btn-back-outline" href="{% url 'store:product_list' %}">
-                        ← Quay lại danh sách
-                    </a>
-                </div>
+                <!-- BẢNG BÁO TỒN KHO Ở TRANG CHI TIẾT -->
+<div style="margin-top: 15px; margin-bottom: 15px; font-size: 15px; padding: 12px; background: #eef8f2; border-radius: 8px; border: 1px solid #008a37; display: inline-block; width: 100%;">
+    {% if product.da_chon_cua_hang %}
+        <div style="color: #64748b; margin-bottom: 5px;">📍 Đang kiểm tra tại: <strong>{{ selected_store_name }}</strong></div>
+        {% if product.ton_kho_hien_tai > 0 %}
+            <div style="color: #0b9445; font-weight: bold; font-size: 16px;">✓ Còn {{ product.ton_kho_hien_tai }} sản phẩm</div>
+        {% else %}
+            <div style="color: #d8232a; font-weight: bold; font-size: 16px;">✕ Tạm hết hàng ở chi nhánh này</div>
+        {% endif %}
+    {% else %}
+        <div style="color: #f39c12; font-weight: bold;">⚠️ Vui lòng ra Trang chủ định vị địa chỉ để xem tồn kho chuẩn nhất</div>
+    {% endif %}
+</div>
 
                 <div class="detail-note-box">
                     <p>Cam kết sản phẩm rõ nguồn gốc, giá minh bạch, phù hợp mua sắm hằng ngày.</p>
                 </div>
             </div>
         </div>
+
+
+        <section class="product-extra-section">
+            <div class="product-extra-card">
+                <h2 class="extra-title">Thông tin chi tiết sản phẩm</h2>
+                <div class="extra-table-wrap">
+                    <table class="extra-info-table">
+                        <tbody>
+                            <tr>
+                                <th>Mô tả</th>
+                                <td>{{ product.mo_ta|default:"Đang cập nhật" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Thành phần</th>
+                                <td>{{ product.thanh_phan|default:"Đang cập nhật" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Công dụng</th>
+                                <td>{{ product.cong_dung|default:"Đang cập nhật" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Cách sử dụng</th>
+                                <td>{{ product.cach_su_dung|default:"Đang cập nhật" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Bảo quản</th>
+                                <td>{{ product.bao_quan|default:"Đang cập nhật" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Quy cách đóng gói</th>
+                                <td>{{ product.quy_cach_dong_goi|default:"Đang cập nhật" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Xuất xứ</th>
+                                <td>{{ product.xuat_xu|default:"Đang cập nhật" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Hạn sử dụng</th>
+                                <td>{{ product.han_su_dung|default:"Đang cập nhật" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Lưu ý</th>
+                                <td>{{ product.luu_y|default:"Đang cập nhật" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
 
         <section class="product-review-section">
             {% if messages %}

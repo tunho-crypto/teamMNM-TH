@@ -26,11 +26,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     
     # Custom Apps (Gộp của cả 2 người)
     'store',
     'locations',
     'dashboard',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -145,3 +147,6 @@ EMAIL_HOST_PASSWORD = '35c5aa70490c6c'
 
 DEFAULT_FROM_EMAIL = "no-reply@bhx.local"
 ADMIN_REVIEW_EMAIL = "admin@example.com"
+
+DEBUG = True
+ALLOWED_HOSTS = ["*"]

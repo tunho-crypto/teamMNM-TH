@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
-
+from django.utils.html import strip_tags
 from ..models import TaiKhoan
 
 def ensure_admin_account():
@@ -58,25 +58,95 @@ def paginate_queryset(request, queryset, per_page=8):
 def generate_otp():
     return f"{random.randint(100000, 999999)}"
 
-
 def send_otp_email(email, otp_code):
-    subject = "Mã OTP xác thực tài khoản BHX"
-    message = (
-        "Xin chào,\n\n"
-        f"Mã OTP của bạn là: {otp_code}\n"
-        "Mã có hiệu lực trong 5 phút.\n\n"
-        "Nếu bạn không thực hiện đăng ký, hãy bỏ qua email này."
-    )
+    subject = "Mã OTP xác thực tài khoản Bách Hóa Xanh"
+    
+    # 1. Giao diện HTML chuẩn chỉnh với tông xanh lá
+    html_message = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 30px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #008a37; margin: 0; font-size: 28px;">BÁCH HÓA XANH</h2>
+            <p style="color: #64748b; margin-top: 5px; font-size: 14px;">Hệ thống mua sắm trực tuyến</p>
+        </div>
+        
+        <p style="color: #333; font-size: 16px; line-height: 1.5;">Xin chào,</p>
+        <p style="color: #333; font-size: 16px; line-height: 1.5;">Bạn vừa yêu cầu mã OTP để xác thực tài khoản. Vui lòng sử dụng mã dưới đây để tiếp tục:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <span style="display: inline-block; font-size: 34px; font-weight: bold; color: #008a37; letter-spacing: 8px; background: #eef8f2; padding: 15px 30px; border-radius: 10px; border: 2px dashed #008a37;">
+                {otp_code}
+            </span>
+        </div>
+        
+        <p style="color: #d8232a; font-size: 14px; font-weight: bold; text-align: center;">
+            ⏳ Mã OTP này có hiệu lực trong vòng 5 phút!
+        </p>
+        <p style="color: #64748b; font-size: 14px; line-height: 1.6; text-align: center; margin-top: 20px;">
+            Tuyệt đối <strong style="color: #d8232a;">KHÔNG CHIA SẺ</strong> mã OTP cho bất kỳ ai, kể cả nhân viên Bách Hóa Xanh để bảo vệ tài khoản của bạn.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+        <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">
+            Email này được tạo tự động. Vui lòng không trả lời email này.<br>
+            &copy; 2026 Bách Hóa Xanh. Trân trọng cảm ơn.
+        </p>
+    </div>
+    """
+    
+    # 2. Tạo bản text thường (phòng khi thiết bị của khách không hỗ trợ hiển thị HTML)
+    plain_message = strip_tags(html_message)
 
+    # 3. Bắn mail đi
     send_mail(
         subject,
-        message,
-        None,
+        plain_message,
+        'no-reply@bachhoaxanh.local',
         [email],
+        html_message=html_message,
         fail_silently=False,
     )
 
+def send_reset_password_email(email, otp_code):
+    subject = "Mã OTP khôi phục mật khẩu Bách Hóa Xanh"
+    
+    html_message = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 30px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #d8232a; margin: 0; font-size: 28px;">BÁCH HÓA XANH</h2>
+            <p style="color: #64748b; margin-top: 5px; font-size: 14px;">Yêu cầu đặt lại mật khẩu</p>
+        </div>
+        
+        <p style="color: #333; font-size: 16px; line-height: 1.5;">Xin chào,</p>
+        <p style="color: #333; font-size: 16px; line-height: 1.5;">Hệ thống vừa nhận được yêu cầu <strong>Khôi phục mật khẩu</strong> cho tài khoản liên kết với email này. Vui lòng sử dụng mã dưới đây để tạo mật khẩu mới:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <span style="display: inline-block; font-size: 34px; font-weight: bold; color: #d8232a; letter-spacing: 8px; background: #fef2f2; padding: 15px 30px; border-radius: 10px; border: 2px dashed #d8232a;">
+                {otp_code}
+            </span>
+        </div>
+        
+        <p style="color: #64748b; font-size: 14px; line-height: 1.6; text-align: center;">
+            ⚠️ Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email. Tuyệt đối không chia sẻ mã này cho người khác.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+        <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">
+            Email này được tạo tự động. Vui lòng không trả lời email này.<br>
+            &copy; 2026 Bách Hóa Xanh. Trân trọng cảm ơn.
+        </p>
+    </div>
+    """
+    
+    plain_message = f"Mã OTP khôi phục mật khẩu của bạn là: {otp_code}. Mã có hiệu lực 5 phút. Nếu không phải bạn yêu cầu, vui lòng bỏ qua."
 
+    send_mail(
+        subject,
+        plain_message,
+        'no-reply@bachhoaxanh.local',
+        [email],
+        html_message=html_message,
+        fail_silently=False,
+    )
 def admin_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
@@ -96,22 +166,16 @@ def render_admin_form(request, form_class, title, success_url, instance=None):
         if form.is_valid():
             obj = form.save(commit=False)
 
-            # =========================================================
-            # XỬ LÝ MẬT KHẨU TÀI KHOẢN (ĐÃ NÂNG CẤP)
-            # =========================================================
             if isinstance(obj, TaiKhoan):
                 raw_password = form.cleaned_data.get("password_hash")
                 
                 if raw_password: 
-                    # Nếu có nhập chữ vào -> Mã hóa thành mật khẩu mới
                     if not str(raw_password).startswith("pbkdf2_"):
                         obj.password_hash = make_password(raw_password)
                 else:
-                    # Nếu để trống -> Mò vào DB lấy lại mật khẩu cũ đắp lên
                     if instance and instance.pk:
                         old_obj = TaiKhoan.objects.get(pk=instance.pk)
                         obj.password_hash = old_obj.password_hash
-            # =========================================================
 
             obj.save()
             return redirect(success_url)

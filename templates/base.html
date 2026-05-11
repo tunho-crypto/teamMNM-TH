@@ -68,7 +68,7 @@
 
         <div class="main-bar">
             <div class="main-bar-inner">
-                
+               
                 <a href="{% url 'home' %}" class="logo-wrap">
                     <div class="logo-box">
                         <span class="logo-sub">Bách hóa</span>
@@ -78,7 +78,9 @@
 
                 <div class="nav-buttons">
                     <a href="{% url 'locations:map_search' %}" class="nav-btn">🗺️ Bản đồ</a>
-                    
+                    <a href="{% url 'store:about' %}" style="display: inline-flex; align-items: center; gap: 5px; background: white; color: #008a37; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+    📖 Giới thiệu
+</a>
                     <a href="{% url 'locations:store_list' %}" class="nav-btn active">📋 Danh sách cửa hàng</a>
                 </div>
 
@@ -98,7 +100,17 @@
                             <span class="cart-count">{{ cart_count }}</span>
                         {% endif %}
                     </a>
+                     <!-- NÚT CHỌN ĐỊA CHỈ TRÊN HEADER -->
+<a href="{% url 'store:location_picker' %}" style="display: inline-flex; align-items: center; gap: 5px; background: #ffe600; color: #111; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+    📍 
+    {% if request.session.dia_chi_giao_hang %}
+        {{ request.session.dia_chi_giao_hang }}
+    {% else %}
+        Chọn địa chỉ giao hàng
+    {% endif %}
+</a>
                 {% endif %}
+                
 
             </div>
         </div>

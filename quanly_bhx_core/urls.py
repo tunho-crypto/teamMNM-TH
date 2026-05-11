@@ -6,6 +6,7 @@ from django.conf.urls.static import static   # <-- Thêm dòng này
 from store import views as store_views
 # <-- Thêm nguyên đoạn này vào cuối file -->
 # Lệnh này giúp Django biết cách lấy ảnh từ thư mục media ra để hiển thị trên web
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     
@@ -15,9 +16,10 @@ urlpatterns = [
     # (Sau này làm store và dashboard thì thêm tiếp vào đây)
     path("", store_views.home, name="home"),
     path("store/", include("store.urls")),
-    
-
 ]
+
+handler404 = "quanly_bhx_core.views.custom_404"
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

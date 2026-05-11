@@ -165,23 +165,27 @@
                                 {% endif %}
                             </div>
 
-                            <div class="product-stock-line">
-                                {% if product.so_luong > 0 %}
-                                <span class="in-stock">Còn {{ product.so_luong }}</span>
+                           <!-- BẢNG TỒN KHO MỚI ĐƯỢC ĐƯA RA NGOÀI -->
+                            <div style="margin-top: 8px; font-size: 13px; margin-bottom: 10px;">
+                                {% if product.da_chon_cua_hang %}
+                                    {% if product.ton_kho_hien_tai > 0 %}
+                                        <div style="color: #0b9445; font-weight: bold;">✓ Còn {{ product.ton_kho_hien_tai }} SP</div>
+                                    {% else %}
+                                        <div style="color: #d8232a; font-weight: bold;">✕ Tạm hết hàng</div>
+                                    {% endif %}
                                 {% else %}
-                                <span class="out-stock">Hết hàng</span>
+                                    <div style="color: #f39c12; font-style: italic; font-size: 12px;">Vui lòng chọn địa chỉ để xem tồn kho</div>
                                 {% endif %}
                             </div>
 
+                            <!-- 2 NÚT BẤM CÂN ĐỐI 50-50 -->
                             <div class="product-actions">
-                                <a href="{% url 'store:product_detail' product.id %}" class="btn-detail">
-                                    Xem chi tiết
-                                </a>
+                                <a href="{% url 'store:product_detail' product.id %}" class="btn-detail">Xem chi tiết</a>
 
-                                {% if product.so_luong > 0 %}
-                                <a href="{% url 'store:add_to_cart' product.id %}" class="btn-add ajax-add-cart">Thêm giỏ</a>
+                                {% if product.ton_kho_hien_tai > 0 %}
+                                    <a href="{% url 'store:add_to_cart' product.id %}" class="btn-add ajax-add-cart">Thêm giỏ</a>
                                 {% else %}
-                                <span class="btn-disabled">Hết hàng</span>
+                                    <span class="btn-disabled" style="background: #e2e8f0; color: #94a3b8; padding: 8px 0; text-align: center; border-radius: 8px; flex: 1;">Hết hàng</span>
                                 {% endif %}
                             </div>
                         </div>

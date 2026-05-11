@@ -20,24 +20,43 @@
                     cursor: not-allowed;
                     display: block;
                 }
+
+                .menu-section-title {
+                    margin: 18px 0 8px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: #94a3b8;
+                }
+
+                .menu-alert {
+                    color: #dc2626 !important;
+                    font-weight: 700;
+                }
             </style>
 
             <nav class="admin-menu">
+                <div class="menu-section-title">Điều hướng</div>
+
                 <a href="{% url 'store:admin_dashboard' %}">Tổng quan</a>
                 <a href="{% url 'store:admin_product_list' %}">Sản phẩm</a>
                 <a href="{% url 'store:admin_customer_list' %}">Khách hàng</a>
                 <a href="{% url 'store:admin_order_list' %}">Đơn hàng</a>
 
                 {% if request.session.role == "ADMIN" %}
+                    <a href="{% url 'store:inventory_management' %}">Quản lý tồn kho</a>
                     <a href="{% url 'store:admin_employee_list' %}">Nhân viên</a>
                     <a href="{% url 'store:admin_account_list' %}">Tài khoản</a>
                     <a href="{% url 'store:admin_branch_list' %}">Chi nhánh</a>
                 {% elif request.session.role == "STAFF" %}
+                    <a href="{% url 'store:staff_inventory' %}">Tồn kho cửa hàng</a>
                     <a href="javascript:void(0)" class="menu-disabled" title="Bạn không có quyền truy cập">Nhân viên</a>
                     <a href="javascript:void(0)" class="menu-disabled" title="Bạn không có quyền truy cập">Tài khoản</a>
                     <a href="javascript:void(0)" class="menu-disabled" title="Bạn không có quyền truy cập">Chi nhánh</a>
                 {% endif %}
 
+                <div class="menu-section-title">Khác</div>
                 <a href="{% url 'store:home' %}">Về trang chủ</a>
                 <a href="{% url 'store:logout' %}">Đăng xuất</a>
             </nav>

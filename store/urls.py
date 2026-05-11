@@ -1,20 +1,28 @@
 from django.urls import path
+from .views.admin import products as admin_products
 from .views import auth
+from .views import public
 from . import views
-
+from store.views.admin import dashboard
 app_name = "store"
 
 urlpatterns = [
+    path('admin/products/import-excel/', admin_products.import_san_pham_excel, name='import_san_pham_excel'),
+    path("chon-dia-chi/", public.location_picker, name="location_picker"),
     path("", views.home, name="home"),
+    path("set-delivery-location/", public.set_delivery_location, name="set_delivery_location"),
+    path('gioi-thieu/', public.about_view, name='about'),
     path("products/", views.product_list, name="product_list"),
     path("products/<int:pk>/", views.product_detail, name="product_detail"),
-    path("set-delivery-location/", views.set_delivery_location, name="set_delivery_location"),
 
     path("cart/", views.cart_detail, name="cart_detail"),
     path("cart/add/<int:pk>/", views.add_to_cart, name="add_to_cart"),
     path("cart/remove/<int:pk>/", views.remove_from_cart, name="remove_from_cart"),
     path("checkout/", views.checkout, name="checkout"),
     path("orders/", views.order_history, name="order_history"),
+    path('dat-hang-thanh-cong/', views.order_success, name='order_success'),
+    path("lich-su-giao-dich/", views.order_history, name="order_history"),
+    path("huy-don-hang/<int:order_id>/", views.cancel_order, name="cancel_order"),
 
     path("login/", views.login_view, name="login"),
     path("login/email/", views.login_email_view, name="login_email"),
@@ -27,6 +35,8 @@ urlpatterns = [
     path("verify-otp/", views.verify_otp_view, name="verify_otp"),
     path("resend-otp/", views.resend_otp_view, name="resend_otp"),
     path('xac-thuc-otp/', auth.verify_otp_view, name='verify_otp'),
+    path('quen-mat-khau/', views.forgot_password_view, name='forgot_password'),
+    path('dat-lai-mat-khau/', views.reset_password_view, name='reset_password'),
 
     path("admin/dashboard/", views.admin_dashboard, name="admin_dashboard"),
     path("admin/products/", views.admin_product_list, name="admin_product_list"),
@@ -66,5 +76,9 @@ urlpatterns = [
     path("comments/<int:pk>/edit/", views.edit_product_comment, name="edit_product_comment"),
     path("comments/<int:pk>/delete/", views.delete_product_comment, name="delete_product_comment"),
     
+    path("admin/inventory/", views.inventory_management, name="inventory_management"),
+    path("staff/inventory/", views.staff_inventory, name="staff_inventory"),
 
+    path("staff/inventory/<int:pk>/update/", views.inventory_update, name="inventory_update"),
+    path('admin/export-excel/', dashboard.export_dashboard_excel, name='export_excel'),
 ]

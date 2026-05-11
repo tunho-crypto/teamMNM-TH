@@ -35,6 +35,8 @@
         padding: 8px 0;
     }
 </style>
+
+
 <section class="home-hero">
     <div class="container">
         <div class="home-hero-box modern-hero-box">
@@ -131,7 +133,6 @@
         </div>
     </div>
 </section>
-
 <section class="featured-products home-product-section">
     <div class="container">
         <div class="section-head">
@@ -142,17 +143,17 @@
             <a href="{% url 'store:product_list' %}" class="section-link">Xem thêm</a>
         </div>
 
+        <!-- 👇 ĐÂY LÀ CÁI THẺ QUYẾT ĐỊNH 4 CỘT NÈ SẾP 👇 -->
         <div class="product-grid product-grid-4">
+            
             {% for product in products_km %}
             <div class="product-card better-product-card">
                 <a href="{% url 'store:product_detail' product.id %}" class="product-image-wrap">
-                            {% if product.anh_chinh %}
-                            <img src="{{ product.anh_chinh.image.url }}" alt="{{ product.ten_san_pham }}"
-                                class="product-image">
-                            {% else %}
-                            <div class="product-image placeholder-image">Chưa có ảnh</div>
-                            {% endif %}
-
+                    {% if product.anh_chinh %}
+                    <img src="{{ product.anh_chinh.image.url }}" alt="{{ product.ten_san_pham }}" class="product-image">
+                    {% else %}
+                    <div class="product-image placeholder-image">Chưa có ảnh</div>
+                    {% endif %}
                     {% if product.is_khuyen_mai %}
                         <span class="product-badge-sale">Sale</span>
                     {% endif %}
@@ -181,19 +182,34 @@
                         {% endif %}
                     </div>
 
+                    <!-- HIỂN THỊ TỒN KHO -->
+                    <div style="margin-top: 8px; font-size: 13px; margin-bottom: 10px;">
+                        {% if product.da_chon_cua_hang %}
+                            {% if product.ton_kho_hien_tai > 0 %}
+                                <div style="color: #0b9445; font-weight: bold;">✓ Còn {{ product.ton_kho_hien_tai }} SP</div>
+                            {% else %}
+                                <div style="color: #d8232a; font-weight: bold;">✕ Tạm hết hàng</div>
+                            {% endif %}
+                        {% else %}
+                            <div style="color: #f39c12; font-style: italic; font-size: 12px;">Vui lòng chọn địa chỉ để xem tồn kho</div>
+                        {% endif %}
+                    </div>
+
                     <div class="product-actions">
                         <a href="{% url 'store:product_detail' product.id %}" class="btn-detail">Xem chi tiết</a>
                         <a href="{% url 'store:add_to_cart' product.id %}" class="btn-add ajax-add-cart">Thêm giỏ</a>
                     </div>
                 </div>
             </div>
+            
             {% empty %}
             <div class="empty-box">
                 <h3>Chưa có sản phẩm khuyến mãi</h3>
                 <p>Hãy quay lại sau để xem thêm các ưu đãi mới nhất.</p>
             </div>
             {% endfor %}
-        </div>
+            
+        </div> <!-- 👆 NHỚ ĐÓNG THẺ DIV GRID 👆 -->
     </div>
 </section>
 

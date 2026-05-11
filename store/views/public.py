@@ -3,58 +3,118 @@ from django.contrib import messages
 from django.db import IntegrityError
 
 from ..models import (
-    LoaiSanPham,
-    SanPham,
-    SanPhamImage,
-    DanhGiaSanPham,
-    BinhLuanSanPham,
-    TaiKhoan,
+    LoaiSanPham, SanPham, ChiNhanh, TonKhoChiNhanh, SanPhamImage, TaiKhoan,
+    BinhLuanSanPham, DanhGiaSanPham
 )
+
 from .common import paginate_queryset
+
 from ..forms import DanhGiaSanPhamForm, BinhLuanSanPhamForm
-
-
 def home(request):
-    categories = LoaiSanPham.objects.all().order_by("ten_loai")
-    products_km = SanPham.objects.prefetch_related("images").filter(is_khuyen_mai=True).order_by("-id")[:8]
-    products_new = SanPham.objects.prefetch_related("images").all().order_by("-id")[:12]
+    san_phams = SanPham.objects.all()[:20] 
+    products_new = SanPham.objects.all().order_by('-id')[:10] # Đổi tên biến ở đây
+    products_km = SanPham.objects.filter(gia_goc__isnull=False)[:10] # Đổi tên biến ở đây
+    
+    if not products_km: 
+        products_km = products_new
 
-    return render(
-        request,
-        "store/home.html",
-        {
-            "categories": categories,
-            "products_km": products_km,
-            "products_new": products_new,
-        },
-    )
+    stores = ChiNhanh.objects.all().order_by("ten_chi_nhanh")
+
+    selected_store_id = request.session.get("selected_store_id")
+    selected_store_name = request.session.get("selected_store_name", "")
+    delivery_address = request.session.get("dia_chi_giao_hang", "") 
+
+    # Map Tồn kho
+    for ds_sp in [san_phams, products_new, products_km]:
+        if selected_store_id:
+            ton_khos = TonKhoChiNhanh.objects.filter(chi_nhanh_id=selected_store_id)
+            dict_ton_kho = {tk.san_pham_id: tk.so_luong_ton for tk in ton_khos}
+            for sp in ds_sp:
+                sp.ton_kho_hien_tai = dict_ton_kho.get(sp.id, 0) 
+                sp.da_chon_cua_hang = True
+        else:
+            for sp in ds_sp:
+                sp.ton_kho_hien_tai = sp.so_luong 
+                sp.da_chon_cua_hang = False
+
+    return render(request, 'store/home.html', {
+        'san_phams': san_phams,
+        'products_new': products_new, # Truyền ra ngoài bằng tên mới
+        'products_km': products_km,   # Truyền ra ngoài bằng tên mới
+        'stores': stores,
+        'selected_store_id': selected_store_id,
+        'selected_store_name': selected_store_name,
+        'delivery_address': delivery_address
+    })
+
+# 2. HÀM XỬ LÝ LƯU ĐỊA CHỈ TỪ TRANG CHỦ -> GIỎ HÀNG
+def set_delivery_location(request):
+    if request.method == "POST":
+        address = request.POST.get("address", "").strip()
+        store_id = request.POST.get("store_id", "").strip()
+        store_name = request.POST.get("store_name", "").strip()
+
+        # Lưu địa chỉ giao hàng vào Session để Giỏ Hàng dùng luôn
+        if address:
+            request.session["dia_chi_giao_hang"] = address
+        
+        # Cập nhật chi nhánh gần nhất
+        if store_id:
+            request.session["selected_store_id"] = store_id
+            request.session["selected_store_name"] = store_name
+            
+        request.session.modified = True
+    return redirect(request.META.get("HTTP_REFERER", "/"))
+
+# ========================================================
+# 3. TRANG GIỚI THIỆU
+# ========================================================
+def about_view(request):
+    return render(request, 'store/about.html')
+
 
 def product_list(request):
     q = request.GET.get("q", "")
     category_id = request.GET.get("category", "")
-    # 1. Bắt tín hiệu Mức giá từ HTML gửi lên
     selected_price = request.GET.get("price", "")
 
     products = SanPham.objects.prefetch_related("images").all().order_by("id")
     categories = LoaiSanPham.objects.all().order_by("ten_loai")
 
-    # Lọc theo từ khóa tìm kiếm
     if q:
         products = products.filter(ten_san_pham__icontains=q)
-
-    # Lọc theo danh mục
     if category_id:
         products = products.filter(loai_id=category_id)
 
-    # 2. Xử lý bộ lọc theo GIÁ (Dựa vào cột don_gia của bạn)
+    # Lọc giá trị (Dựa vào cột gia_hien_tai chứ không phải don_gia)
     if selected_price == 'under_50':
-        products = products.filter(don_gia__lt=50000)
+        products = products.filter(gia_hien_tai__lt=50000)
     elif selected_price == '50_100':
-        products = products.filter(don_gia__gte=50000, don_gia__lte=100000)
+        products = products.filter(gia_hien_tai__gte=50000, gia_hien_tai__lte=100000)
     elif selected_price == 'over_100':
-        products = products.filter(don_gia__gt=100000)
+        products = products.filter(gia_hien_tai__gt=100000)
 
-    page_obj = paginate_queryset(request, products, 8)
+    # 👇 ĐOẠN MỚI: Bổ sung load tồn kho cửa hàng cho trang product_list 👇
+    selected_store_id = request.session.get("selected_store_id")
+    selected_store_name = request.session.get("selected_store_name")
+    
+    # Note: Lấy data ra list() trước để có thể gán thuộc tính động (ton_kho_hien_tai)
+    # Lát nữa dùng paginate_queryset thì truyền cái list này vào
+    products_list = list(products) 
+    
+    if selected_store_id:
+        ton_khos = TonKhoChiNhanh.objects.filter(chi_nhanh_id=selected_store_id)
+        dict_ton_kho = {tk.san_pham_id: tk.so_luong_ton for tk in ton_khos}
+        for sp in products_list:
+            sp.ton_kho_hien_tai = dict_ton_kho.get(sp.id, 0) 
+            sp.da_chon_cua_hang = True
+    else:
+        for sp in products_list:
+            sp.ton_kho_hien_tai = sp.so_luong 
+            sp.da_chon_cua_hang = False
+    # 👆 ======================================================== 👆
+
+    page_obj = paginate_queryset(request, products_list, 8)
 
     return render(
         request,
@@ -65,10 +125,12 @@ def product_list(request):
             "categories": categories,
             "query": q,
             "selected_category": category_id,
-            # 3. Truyền biến selected_price ra HTML để nó in đậm cái menu đang chọn
-            "selected_price": selected_price, 
+            "selected_price": selected_price,
+            "selected_store_name": selected_store_name, # Truyền ra HTML
         },
     )
+
+# ... (Các hàm bên dưới như product_detail, post_review... sếp giữ nguyên nhé)
 
 def product_detail(request, pk):
     product = get_object_or_404(
@@ -77,7 +139,16 @@ def product_detail(request, pk):
     )
     images = product.images.all()
     binh_luans = product.binh_luans.filter(hien_thi=True)
+    selected_store_id = request.session.get("selected_store_id")
+    selected_store_name = request.session.get("selected_store_name", "")
 
+    if selected_store_id:
+        ton_kho = TonKhoChiNhanh.objects.filter(chi_nhanh_id=selected_store_id, san_pham=product).first()
+        product.ton_kho_hien_tai = ton_kho.so_luong_ton if ton_kho else 0
+        product.da_chon_cua_hang = True
+    else:
+        product.ton_kho_hien_tai = product.so_luong
+        product.da_chon_cua_hang = False
     tai_khoan_id = request.session.get("tai_khoan_id")
     tai_khoan = None
     my_comment = None
@@ -178,14 +249,7 @@ def delete_product_comment(request, pk):
 
     return redirect("store:product_detail", pk=product_id)
 
-
-def set_delivery_location(request):
-    if request.method == "POST":
-        city = request.POST.get("city", "").strip()
-        district = request.POST.get("district", "").strip()
-        address = request.POST.get("address", "").strip()
-
-        full_address = ", ".join([item for item in [address, district, city] if item])
-        request.session["delivery_address"] = full_address
-
-    return redirect(request.META.get("HTTP_REFERER", "/"))
+def location_picker(request):
+    stores = ChiNhanh.objects.all()
+    # Truyền danh sách cửa hàng ra để JS tính toán khoảng cách
+    return render(request, 'store/location_picker.html', {'stores': stores})

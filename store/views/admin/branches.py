@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
 
 from ...forms import ChiNhanhForm
-from ...models import ChiNhanh, ChiNhanhImage # <--- QUAN TRỌNG: Import bảng chứa ảnh vào đây
+from ...models import ChiNhanh, ChiNhanhImage
 from ..common import admin_required, paginate_queryset, render_admin_delete, render_admin_form
 
 
@@ -28,7 +28,6 @@ def admin_branch_list(request):
 
 @admin_required
 def admin_branch_create(request):
-    # Chạy hàm lưu mặc định của hệ thống
     response = render_admin_form(
         request,
         ChiNhanhForm,
@@ -36,9 +35,8 @@ def admin_branch_create(request):
         success_url="store:admin_branch_list",
     )
 
-    # NẾU LƯU THÀNH CÔNG (Mã 302 là thành công) -> Hứng ảnh và lưu luôn!
     if request.method == "POST" and response.status_code == 302:
-        new_branch = ChiNhanh.objects.latest('id') # Lấy chi nhánh vừa được tạo
+        new_branch = ChiNhanh.objects.latest('id')
         danh_sach_anh = request.FILES.getlist('hinh_anh_phu')
         for file_anh in danh_sach_anh:
             ChiNhanhImage.objects.create(chi_nhanh=new_branch, image=file_anh)
@@ -49,27 +47,19 @@ def admin_branch_create(request):
 def admin_branch_edit(request, pk):
     branch = get_object_or_404(ChiNhanh, pk=pk)
     
-    # =======================================================
-    # XỬ LÝ XÓA ẢNH TRƯỚC KHI LƯU THÔNG TIN KHÁC
-    # =======================================================
     if request.method == "POST":
-        # 1. Trị dứt điểm lỗi nút Xóa ảnh đại diện (checkbox mặc định của Django tên là hinh_anh-clear)
         if request.POST.get("hinh_anh-clear") == "on":
             if branch.hinh_anh:
-                branch.hinh_anh.delete(save=False) # Xóa file vật lý trong máy
+                branch.hinh_anh.delete(save=False)
                 branch.hinh_anh = None
                 branch.save()
 
-        # 2. Xóa các ảnh phụ được sếp tick chọn
         danh_sach_xoa = request.POST.getlist("xoa_anh_phu")
         if danh_sach_xoa:
-            # Tìm các ảnh mang ID bị tick xóa và tiêu diệt chúng
             for img in ChiNhanhImage.objects.filter(id__in=danh_sach_xoa, chi_nhanh=branch):
-                img.image.delete(save=False) # Xóa file vật lý trong máy
-                img.delete() # Xóa record trong Database
-    # =======================================================
+                img.image.delete(save=False)
+                img.delete()
 
-    # Chạy hàm lưu mặc định của hệ thống
     response = render_admin_form(
         request,
         ChiNhanhForm,
@@ -78,7 +68,6 @@ def admin_branch_edit(request, pk):
         success_url="store:admin_branch_list",
     )
 
-    # NẾU LƯU THÀNH CÔNG (Mã 302) -> Nhét đống ảnh phụ mới vào Database
     if request.method == "POST" and response.status_code == 302:
         danh_sach_anh = request.FILES.getlist('hinh_anh_phu')
         for file_anh in danh_sach_anh:

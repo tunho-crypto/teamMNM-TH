@@ -1,15 +1,14 @@
 from datetime import timedelta
 import email
-
+import random
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import redirect, render
 from django.utils import timezone
-
 from ..models import EmailOTP, TaiKhoan
-from .common import generate_otp, send_otp_email
+from .common import generate_otp, send_otp_email, send_reset_password_email
 
 
 SESSION_USER_KEYS = ("tai_khoan_id", "ho_ten", "role")
@@ -293,3 +292,73 @@ def resend_otp_view(request):
     EmailOTP.objects.filter(tai_khoan=tai_khoan, is_used=False).update(is_used=True)
     _create_email_otp(tai_khoan, pending_email)
     return redirect("store:verify_otp")
+
+# 1. Trang nhập email để lấy lại mật khẩu
+def forgot_password_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            # Kiểm tra xem email có trong hệ thống không
+            tai_khoan = TaiKhoan.objects.get(email=email)
+            
+            # Tạo mã OTP 6 số
+            otp_code = str(random.randint(100000, 999999))
+            
+            # Lưu tạm OTP và Email vào session để trang sau dùng
+            request.session['reset_otp'] = otp_code
+            request.session['reset_email'] = email
+            
+            try:
+                send_reset_password_email(email, otp_code)
+            except Exception as e:
+                print(f"Lỗi gửi mail: {e}")
+                return render(request, 'store/forgot_password.html', {
+                    'error': 'Hệ thống đang bận gửi mail (Mailtrap limit), vui lòng thử lại sau 30 giây!'
+                })
+            
+            return redirect('store:reset_password')
+            
+        except TaiKhoan.DoesNotExist:
+            return render(request, 'store/forgot_password.html', {
+                'error': 'Email này chưa được đăng ký trong hệ thống!'
+            })
+            return render(request, 'store/forgot_password.html')
+            return redirect('store:reset_password')
+            
+        except TaiKhoan.DoesNotExist:
+            return render(request, 'store/forgot_password.html', {'error': 'Email này chưa được đăng ký trong hệ thống!'})
+
+    return render(request, 'store/forgot_password.html')
+
+# 2. Trang nhập OTP và đổi mật khẩu mới
+def reset_password_view(request):
+    email = request.session.get('reset_email')
+    
+    # Nếu không có email trong session (vào lụi) thì đuổi về trang quên mật khẩu
+    if not email:
+        return redirect('store:forgot_password')
+
+    if request.method == 'POST':
+        otp_code = request.POST.get('otp_code')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if otp_code != request.session.get('reset_otp'):
+            return render(request, 'store/reset_password.html', {'error': 'Mã OTP không chính xác!', 'email': email})
+            
+        if new_password != confirm_password:
+            return render(request, 'store/reset_password.html', {'error': 'Mật khẩu xác nhận không khớp!', 'email': email})
+
+        # Lưu mật khẩu mới vào Database (nhớ mã hóa)
+        tai_khoan = TaiKhoan.objects.get(email=email)
+        tai_khoan.password_hash = make_password(new_password)
+        tai_khoan.save()
+
+        # Dọn dẹp session cho sạch sẽ
+        del request.session['reset_otp']
+        del request.session['reset_email']
+
+        # Xong xuôi thì đá về trang đăng nhập
+        return redirect('store:login_email')
+
+    return render(request, 'store/reset_password.html', {'email': email})
