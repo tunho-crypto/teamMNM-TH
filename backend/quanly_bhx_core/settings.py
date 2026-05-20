@@ -1,6 +1,7 @@
 """
 Django settings for quanly_bhx_core project.
 """
+import os
 from pathlib import Path
  
 # 1. BASE CONFIGURATION 
@@ -9,10 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Giữ lại SECRET_KEY của bạn (bảo mật hơn)
 SECRET_KEY = 'django-insecure-qdde6o+=xh=v3e%4uu+8uf-n93wi1$1pi7&uw%mi$wm5yjyzf!'
 
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+DEBUG = False # Tắt chế độ test để tăng bảo mật
+ALLOWED_HOSTS = ['*']
 
 # 2. APPLICATIONS & MIDDLEWARE
 INSTALLED_APPS = [
@@ -34,6 +33,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -134,3 +134,5 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
