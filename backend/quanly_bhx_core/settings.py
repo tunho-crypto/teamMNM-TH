@@ -3,7 +3,7 @@ Django settings for quanly_bhx_core project.
 """
 import os
 from pathlib import Path
- 
+import dj_database_url
 # 1. BASE CONFIGURATION 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -67,16 +67,15 @@ TEMPLATES = [
 
 # 4. DATABASE
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'BHX',    
-        'USER': 'postgres',          
-        'PASSWORD': '123456', # Nếu máy của bạn bạn kia pass là '123' thì bạn ấy phải tự sửa ở máy bạn ấy       
-        'HOST': 'localhost', # localhost hay 127.0.0.1 đều giống nhau
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        # 1. NẾU CHẠY DƯỚI MÁY SẾP: Nó sẽ dùng link này (đúng với pass 123456 và db BHX của sếp)
+        default='postgresql://postgres:123456@localhost:5432/BHX',
+        
+        # 2. NẾU LÊN MÂY (RENDER): Nó tự động ngó lơ cái dòng trên và lấy link DATABASE_URL sếp dán trên web
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
-
 
 # 5. PASSWORD VALIDATION
 AUTH_PASSWORD_VALIDATORS = [
