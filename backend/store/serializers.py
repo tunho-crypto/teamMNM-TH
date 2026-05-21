@@ -15,7 +15,7 @@ class SanPhamSerializer(serializers.ModelSerializer):
         anh = obj.anh_chinh # Gọi cái @property trong models.py của sếp
         if anh and anh.image:
             # Gắn thêm gốc localhost:8000 để VueJS gọi sang cho đúng
-            return f"http://localhost:8000{anh.image.url}"
+            return f"https://teammnm-th.onrender.com{anh.image.url}"
         # Nếu sản phẩm chưa có ảnh, trả về một ảnh mặc định cho đỡ trống
         return "https://via.placeholder.com/300x200?text=Chưa+có+ảnh"
     
